@@ -1,0 +1,59 @@
+{
+  "_comment": [
+    "Expected gateway config for a public Control UI behind a Nebula tunnel.",
+    "Merge these keys into ~/.openclaw/openclaw.json — do not replace the whole file.",
+    "Replace <workspace>-<id> with your own hostname. Never commit a real one."
+  ],
+
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+
+    "_bind": "REQUIRED. Loopback-only cannot be reached through the tunnel.",
+    "bind": "lan",
+
+    "auth": {
+      "_mode": "Shared-secret token auth. The token goes in the URL fragment, not the query string.",
+      "mode": "token",
+      "token": "<generate-a-long-random-token>"
+    },
+
+    "_trustedProxies": "cloudflared connects from localhost. Without this the gateway loses the client address and pairing approval shows the wrong IP.",
+    "trustedProxies": ["127.0.0.1", "::1"],
+
+    "_publicOrigin": "Set by the platform. Must match the hostname you browse to, or the gateway rejects the origin.",
+    "publicOrigin": "https://<workspace>-<id>-18789.nebula.me"
+  },
+
+  "_tunnel_ingress_reference": {
+    "_note": "This lives in /etc/cloudflared/config.yml, NOT in openclaw.json. Shown here for reference only.",
+    "tunnel": "<tunnel-uuid>",
+    "credentials-file": "/etc/cloudflared/credentials.json",
+    "ingress": [
+      {
+        "hostname": "<workspace>-<id>-18789.nebula.me",
+        "service": "http://localhost:18789"
+      },
+      {
+        "_comment": "Catch-all. Unknown hostnames get 404 instead of routing somewhere unexpected.",
+        "service": "http_status:404"
+      }
+    ]
+  },
+
+  "_how_to_apply": [
+    "1. cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak.$(date +%Y%m%d%H%M%S)",
+    "2. openclaw config set gateway.bind lan",
+    "3. openclaw config set gateway.auth.mode token",
+    "4. openclaw config set gateway.auth.token <generate-a-long-random-token>",
+    "5. openclaw config set gateway.publicOrigin https://<workspace>-<id>-18789.nebula.me",
+    "6. openclaw config validate",
+    "7. kill -USR1 \"$(pgrep -f openclaw-gateway | head -1)\"   # reload, never restart",
+    "8. openclaw dashboard --json --no-open   # get the #token= URL",
+    "9. openclaw devices list                # approve the pending browser pairing"
+  ],
+
+  "_do_not_add": {
+    "allowedOrigins": "Not needed when publicOrigin matches. Only add on an explicit origin error. A 401 means the origin was already accepted and only credentials are missing."
+  }
+}

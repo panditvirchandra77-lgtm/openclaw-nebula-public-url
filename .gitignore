@@ -1,0 +1,21 @@
+# Secrets — never commit these
+*.pem
+*.key
+credentials.json
+.env
+.env.*
+*.token
+secrets/
+
+# Real workspace identifiers (hostnames, tunnel UUIDs)
+# This repo uses placeholders like <workspace>-<id> and <tunnel-uuid>.
+# Add your real ones to .git/info/exclude instead of committing them.
+.env.local
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
